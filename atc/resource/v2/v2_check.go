@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"reflect"
 
 	"code.cloudfoundry.org/garden"
 	"github.com/concourse/concourse/atc"
@@ -104,7 +105,7 @@ func (r *resource) Check(
 			}
 		}
 
-		spaces := make(map[atc.Space]bool)
+		spaces := make(map[atc.Space]atc.Version)
 		for decoder.More() {
 			var version atc.SpaceVersion
 			err := decoder.Decode(&version)
@@ -119,11 +120,20 @@ func (r *resource) Check(
 				}
 			}
 
-			spaces[version.Space] = true
-
 			err = r.resourceConfig.SaveVersion(version)
 			if err != nil {
 				return err
+			}
+
+			spaces[version.Space] = version.Version
+		}
+
+		for space, version := range spaces {
+			if reflect.DeepEqual(version, from[space]) {
+				err = r.resourceConfig.SaveSpaceLatestVersion(space, version)
+				if err != nil {
+					return err
+				}
 			}
 		}
 

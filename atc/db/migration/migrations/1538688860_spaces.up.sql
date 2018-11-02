@@ -2,7 +2,7 @@ BEGIN;
 
   CREATE TABLE spaces (
     id serial PRIMARY KEY,
-    resource_config_id int REFERENCES resource_configs (id) ON DELETE CASCADE,
+    resource_config_id integer REFERENCES resource_configs (id) ON DELETE CASCADE,
     name text NOT NULL,
     UNIQUE (resource_config_id, name)
   );
@@ -15,6 +15,9 @@ BEGIN;
       "metadata" jsonb NOT NULL DEFAULT 'null',
       "check_order" integer NOT NULL DEFAULT 0
   );
+
+  ALTER TABLE spaces
+    ADD COLUMN latest_resource_version_id integer REFERENCES resource_versions (id) ON DELETE CASCADE;
 
   ALTER TABLE resource_versions
     ADD CONSTRAINT space_id_and_version_md5_unique UNIQUE (space_id, version_md5);
